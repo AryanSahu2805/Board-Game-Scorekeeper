@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/player_provider.dart';
 import '../providers/game_provider.dart';
+import '../providers/tournament_provider.dart';
+import '../models/tournament.dart';
 import '../widgets/hover_text.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -44,6 +46,38 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const SizedBox(height: 16),
+            // Show a Continue button when there is an active game or tournament
+            Consumer2<GameProvider, TournamentProvider>(
+              builder: (context, gameProvider, tournamentProvider, child) {
+                final hasActiveGame = gameProvider.currentGame != null && !gameProvider.currentGame!.isCompleted;
+                final hasActiveTournament = tournamentProvider.currentTournament != null && tournamentProvider.currentTournament!.status != TournamentStatus.completed;
+
+                if (!hasActiveGame && !hasActiveTournament) return const SizedBox.shrink();
+
+                final label = hasActiveGame
+                    ? 'Continue Game'
+                    : 'Continue Tournament: ${tournamentProvider.currentTournament!.name}';
+
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (hasActiveGame) {
+                            Navigator.pushNamed(context, '/score-entry');
+                          } else {
+                            Navigator.pushNamed(context, '/tournament-view');
+                          }
+                        },
+                        child: HoverText(label),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                );
+              },
+            ),
             Row(
               children: [
                 Expanded(
