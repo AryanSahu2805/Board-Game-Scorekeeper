@@ -6,7 +6,12 @@ import '../providers/game_provider.dart';
 import '../widgets/hover_text.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  /// When [embedded] is true the widget will render only the inner content
+  /// (no Scaffold / AppBar / BottomNavigationBar). This allows embedding
+  /// the Home screen inside a parent (for example a PageView).
+  const HomeScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -17,15 +22,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const HoverText('Board Game Scorekeeper'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    // If embedded, only return the inner body so a parent can provide the
+    // Scaffold (useful when used inside a PageView).
+    final inner = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Consumer<PlayerProvider>(
               builder: (context, playerProvider, child) {
                 final userName = playerProvider.players.isNotEmpty
@@ -143,7 +146,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      );
+
+    if (widget.embedded) return inner;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const HoverText('Board Game Scorekeeper'),
       ),
+      body: inner,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddPlayerDialog,
         tooltip: 'Add Player',
@@ -151,14 +162,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF0F1114),
-  unselectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white,
         selectedItemColor: Colors.white,
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() => _selectedIndex = index);
-          
+
           if (index == 1) {
-            // History - could navigate to a history screen
+            Navigator.pushNamed(context, '/history');
           } else if (index == 2) {
             Navigator.pushNamed(context, '/tournament-setup');
           }
@@ -178,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-  title: const HoverText('Add Player'),
+        title: const HoverText('Add Player'),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(

@@ -277,6 +277,15 @@ class DatabaseHelper {
     return List.generate(maps.length, (i) => Match.fromMap(maps[i]));
   }
 
+  Future<List<Match>> getAllMatches() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'matches',
+      orderBy: 'rowid DESC',
+    );
+    return List.generate(maps.length, (i) => Match.fromMap(maps[i]));
+  }
+
   Future<void> updateMatch(Match match) async {
     final db = await database;
     await db.update(

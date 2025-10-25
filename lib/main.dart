@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/player_provider.dart';
 import 'providers/game_provider.dart';
 import 'providers/tournament_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_tabs_screen.dart';
 import 'screens/score_entry_screen.dart';
 import 'screens/player_profile_screen.dart';
 import 'screens/player_management_screen.dart';
@@ -32,7 +32,7 @@ class BoardGameScorekeeperApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: _buildTheme(),
         routes: {
-          '/': (context) => const HomeScreen(),
+          '/': (context) => const MainTabsScreen(),
           '/history': (context) => const HistoryScreen(),
           '/score-entry': (context) => const ScoreEntryScreen(),
           '/player-profile': (context) => const PlayerProfileScreen(),
