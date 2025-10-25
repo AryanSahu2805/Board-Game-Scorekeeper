@@ -5,7 +5,7 @@ class Game {
   final List<String> playerIds;
   final Map<String, int> finalScores; // playerId -> score
   String? winnerId;
-  final int totalRounds;
+  int totalRounds;
   final List<RoundScore> roundScores;
   bool isCompleted;
 

@@ -54,7 +54,7 @@ class BoardGameScorekeeperApp extends StatelessWidget {
       ),
       scaffoldBackgroundColor: const Color(0xFF0F1114),
       cardColor: const Color(0xFF131516),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: const Color(0xFF131516),
         elevation: 2,
         shape: RoundedRectangleBorder(
