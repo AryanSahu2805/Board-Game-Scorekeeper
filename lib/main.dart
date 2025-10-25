@@ -110,8 +110,8 @@ class BoardGameScorekeeperApp extends StatelessWidget {
         checkColor: WidgetStateProperty.all<Color>(Colors.white),
         side: const BorderSide(color: Colors.blueAccent),
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: const Color(0xFF071218),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFF071218),
         selectedItemColor: Colors.cyanAccent,
         unselectedItemColor: Colors.white70,
       ),
