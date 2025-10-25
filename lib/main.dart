@@ -49,21 +49,25 @@ class BoardGameScorekeeperApp extends StatelessWidget {
   ThemeData _buildTheme() {
     final base = ThemeData.dark();
     return base.copyWith(
+      // Use high-contrast white for primary body text so colored accents pop
       textTheme: base.textTheme.apply(
-        bodyColor: Colors.blue,
-        displayColor: Colors.blue,
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
       ),
       primaryTextTheme: base.primaryTextTheme.apply(
-        bodyColor: Colors.blue,
-        displayColor: Colors.blue,
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
       ),
+      // Brighter primary and secondary accents for a more vibrant feeling
       colorScheme: base.colorScheme.copyWith(
-        primary: Colors.grey[900],
-        secondary: Colors.blueGrey,
-        surface: const Color(0xFF131516),
+        primary: Colors.blueAccent,
+        secondary: Colors.cyanAccent,
+        surface: const Color(0xFF0D1A22),
       ),
-      scaffoldBackgroundColor: const Color(0xFF0F1114),
-      cardColor: const Color(0xFF131516),
+      // Slightly lighter background so accents contrast well
+      scaffoldBackgroundColor: const Color(0xFF081218),
+      // Card color with a subtle tint so cards lift visually from the background
+      cardColor: const Color(0xFF0F222B),
       cardTheme: CardThemeData(
         color: const Color(0xFF131516),
         elevation: 2,
@@ -73,7 +77,7 @@ class BoardGameScorekeeperApp extends StatelessWidget {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white24,
+          backgroundColor: Colors.blueAccent,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
           shape: RoundedRectangleBorder(
@@ -83,8 +87,8 @@ class BoardGameScorekeeperApp extends StatelessWidget {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white70,
-          side: const BorderSide(color: Colors.white24),
+          foregroundColor: Colors.cyanAccent,
+          side: const BorderSide(color: Colors.cyanAccent),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -100,12 +104,16 @@ class BoardGameScorekeeperApp extends StatelessWidget {
       // Use WidgetStateProperty / WidgetState (newer API) to avoid deprecated MaterialStateProperty/MaterialState
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith<Color>((states) {
-          // When checked, use the primary blue. When unchecked, use a slightly transparent blue for the border/fill.
-          if (states.contains(WidgetState.selected)) return Colors.blue;
-          return Colors.blue.withAlpha(120);
+          if (states.contains(WidgetState.selected)) return Colors.blueAccent;
+          return Colors.blueAccent.withAlpha(150);
         }),
         checkColor: WidgetStateProperty.all<Color>(Colors.white),
-        side: const BorderSide(color: Colors.blue),
+        side: const BorderSide(color: Colors.blueAccent),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: const Color(0xFF071218),
+        selectedItemColor: Colors.cyanAccent,
+        unselectedItemColor: Colors.white70,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

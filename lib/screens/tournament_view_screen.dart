@@ -43,6 +43,19 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
 
         return Scaffold(
           appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () async {
+                // Persist tournament state before leaving so it can be resumed later
+                final navigator = Navigator.of(context);
+                await tournamentProvider.persistCurrentTournament();
+                if (navigator.canPop()) {
+                  navigator.pop();
+                } else {
+                  navigator.pushReplacementNamed('/');
+                }
+              },
+            ),
             title: HoverText(tournament.name),
             bottom: TabBar(
               controller: _tabController,

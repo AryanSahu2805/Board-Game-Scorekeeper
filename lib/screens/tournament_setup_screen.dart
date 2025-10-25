@@ -20,9 +20,22 @@ class _TournamentSetupScreenState extends State<TournamentSetupScreen> {
   final Set<String> _selectedParticipants = {};
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild when the tournament name changes so the Create button updates
+    _nameController.addListener(_onNameChanged);
+  }
+
+  @override
   void dispose() {
+    _nameController.removeListener(_onNameChanged);
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _onNameChanged() {
+    // Calling setState ensures validation message and button state update
+    if (mounted) setState(() {});
   }
 
   @override

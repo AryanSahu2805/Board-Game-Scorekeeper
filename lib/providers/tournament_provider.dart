@@ -234,4 +234,15 @@ class TournamentProvider with ChangeNotifier {
     _standings = {};
     notifyListeners();
   }
+
+  /// Persist the current tournament row to the database if set.
+  /// Useful before navigating away so the UI can be resumed later.
+  Future<void> persistCurrentTournament() async {
+    if (_currentTournament == null) return;
+    try {
+      await _dbHelper.updateTournament(_currentTournament!);
+    } catch (e) {
+      debugPrint('Error persisting tournament: $e');
+    }
+  }
 }
