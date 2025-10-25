@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/player_provider.dart';
 import '../providers/game_provider.dart';
+import '../widgets/hover_text.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Board Game Scorekeeper'),
+        title: const HoverText('Board Game Scorekeeper'),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12),
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 final userName = playerProvider.players.isNotEmpty
                     ? playerProvider.players.first.name
                     : 'Player';
-                return Text(
+                return HoverText(
                   'Welcome back, $userName',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 22,
@@ -45,14 +46,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, '/score-entry'),
-                    child: const Text('New Game'),
+                    child: const HoverText('New Game'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, '/tournament-setup'),
-                    child: const Text('Create Tournament'),
+                    child: const HoverText('Create Tournament'),
                   ),
                 ),
               ],
@@ -64,10 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 minimumSize: const Size(double.infinity, 48),
               ),
-              child: const Text('Player Profiles'),
+              child: const HoverText('Player Profiles'),
             ),
             const SizedBox(height: 20),
-            const Text(
+            const HoverText(
               'Recent Games',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
@@ -82,25 +83,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   final recentGames = gameProvider.games.take(10).toList();
 
                   if (recentGames.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.games_outlined,
                               size: 64, color: Colors.white24),
-                          const SizedBox(height: 16),
-                          Text(
+                          SizedBox(height: 16),
+                          HoverText(
                             'No games played yet',
                             style: TextStyle(
-                              color: Colors.white54,
+                              color: Colors.white,
                               fontSize: 16,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
+                          SizedBox(height: 8),
+                          HoverText(
                             'Start a new game to get started!',
                             style: TextStyle(
-                              color: Colors.white38,
+                              color: Colors.white,
                               fontSize: 14,
                             ),
                           ),
@@ -143,9 +144,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddPlayerDialog,
+        tooltip: 'Add Player',
+        child: const Icon(Icons.person_add),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF0F1114),
-        unselectedItemColor: Colors.white54,
+  unselectedItemColor: Colors.white,
         selectedItemColor: Colors.white,
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -166,15 +172,56 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showAddPlayerDialog() {
+    final nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+  title: const HoverText('Add Player'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Name',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const HoverText('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+
+              await context.read<PlayerProvider>().addPlayer(name);
+
+              if (ctx.mounted) Navigator.pop(ctx);
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: HoverText('Player "$name" added')),
+                );
+              }
+            },
+            child: const HoverText('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _recentGameTile(String title, String subtitle, String time) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: Text(
+        title: HoverText(title),
+        subtitle: HoverText(subtitle),
+        trailing: HoverText(
           time,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
+          style: const TextStyle(color: Colors.white, fontSize: 12),
         ),
       ),
     );

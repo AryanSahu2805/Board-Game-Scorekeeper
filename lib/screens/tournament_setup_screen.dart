@@ -132,7 +132,7 @@ class _TournamentSetupScreenState extends State<TournamentSetupScreen> {
                         ),
                         Text(
                           '${_selectedParticipants.length} selected',
-                          style: const TextStyle(color: Colors.white54),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
@@ -145,7 +145,7 @@ class _TournamentSetupScreenState extends State<TournamentSetupScreen> {
                               children: [
                                 const Text(
                                   'No players available',
-                                  style: TextStyle(color: Colors.white54),
+                                  style: TextStyle(color: Colors.white),
                                 ),
                                 TextButton(
                                   onPressed: () {

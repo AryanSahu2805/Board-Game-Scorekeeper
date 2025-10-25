@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/player_provider.dart';
 import '../models/game_template.dart';
+import '../widgets/hover_text.dart';
 
 class ScoreEntryScreen extends StatefulWidget {
   const ScoreEntryScreen({super.key});
@@ -13,10 +14,10 @@ class ScoreEntryScreen extends StatefulWidget {
 
 class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
   GameTemplate? _selectedTemplate;
-  List<String> _selectedPlayerIds = [];
+  final List<String> _selectedPlayerIds = [];
   bool _gameStarted = false;
-  Map<String, TextEditingController> _scoreControllers = {};
-  int _currentPlayerIndex = 0;
+  final Map<String, TextEditingController> _scoreControllers = {};
+  final int _currentPlayerIndex = 0;
 
   @override
   void initState() {
@@ -41,7 +42,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_gameStarted ? 'Enter Scores' : 'Setup Game'),
+        title: HoverText(_gameStarted ? 'Enter Scores' : 'Setup Game'),
         actions: _gameStarted
             ? [
                 IconButton(
@@ -68,27 +69,32 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  const HoverText(
                     'Select Game',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 12),
                   Consumer<GameProvider>(
                     builder: (context, gameProvider, child) {
-                      return DropdownButtonFormField<GameTemplate>(
-                        value: _selectedTemplate,
+                      return DropdownButtonFormField<String>(
+                        initialValue: _selectedTemplate?.name,
                         decoration: const InputDecoration(
                           hintText: 'Choose a game...',
                         ),
                         items: gameProvider.availableTemplates.map((template) {
-                          return DropdownMenuItem(
-                            value: template,
-                            child: Text(template.name),
+                          return DropdownMenuItem<String>(
+                            value: template.name,
+                            child: HoverText(template.name),
                           );
                         }).toList(),
-                        onChanged: (template) {
-                          setState(() => _selectedTemplate = template);
-                          gameProvider.selectTemplate(template!);
+                        onChanged: (templateName) {
+                          if (templateName == null) return;
+                          final selected = gameProvider.availableTemplates.firstWhere(
+                            (t) => t.name == templateName,
+                            orElse: () => gameProvider.availableTemplates.first,
+                          );
+                          setState(() => _selectedTemplate = selected);
+                          gameProvider.selectTemplate(selected);
                         },
                       );
                     },
@@ -104,7 +110,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  const HoverText(
                     'Select Players',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
@@ -115,16 +121,16 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                         return Center(
                           child: Column(
                             children: [
-                              const Text(
+                              const HoverText(
                                 'No players available',
-                                style: TextStyle(color: Colors.white54),
+                                      style: TextStyle(color: Colors.white),
                               ),
                               const SizedBox(height: 8),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pushNamed(context, '/player-management');
                                 },
-                                child: const Text('Add Players'),
+                                child: const HoverText('Add Players'),
                               ),
                             ],
                           ),
@@ -135,7 +141,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                         children: playerProvider.players.map((player) {
                           final isSelected = _selectedPlayerIds.contains(player.id);
                           return CheckboxListTile(
-                            title: Text(player.name),
+                            title: HoverText(player.name),
                             value: isSelected,
                             onChanged: (value) {
                               setState(() {
@@ -161,12 +167,12 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('Start Game', style: TextStyle(fontSize: 16)),
+            child: const HoverText('Start Game', style: TextStyle(fontSize: 16)),
           ),
           if (!_canStartGame() && _selectedTemplate != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              child: Text(
+              child: HoverText(
                 'Please select at least 2 players',
                 style: TextStyle(color: Colors.orange[300], fontSize: 12),
                 textAlign: TextAlign.center,
@@ -181,7 +187,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
     return Consumer2<GameProvider, PlayerProvider>(
       builder: (context, gameProvider, playerProvider, child) {
         final game = gameProvider.currentGame;
-        if (game == null) return const Center(child: Text('No active game'));
+  if (game == null) return const Center(child: HoverText('No active game'));
 
         // Initialize score controllers
         for (var playerId in game.playerIds) {
@@ -198,18 +204,18 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  HoverText(
                     game.gameName,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Text(
+                        HoverText(
                     'Round ${game.totalRounds + 1}',
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.white70,
+                      color: Colors.white,
                     ),
                   ),
                 ],
@@ -227,10 +233,10 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                   final currentScore = game.finalScores[playerId] ?? 0;
                   final isCurrentPlayer = index == _currentPlayerIndex;
 
-                  return Card(
-                    color: isCurrentPlayer
-                        ? Colors.blue.withOpacity(0.1)
-                        : const Color(0xFF131516),
+          return Card(
+          color: isCurrentPlayer
+            ? Colors.blue.withAlpha(26)
+            : const Color(0xFF131516),
                     margin: const EdgeInsets.only(bottom: 12),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -240,24 +246,24 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                           Row(
                             children: [
                               CircleAvatar(
-                                child: Text(player.name[0].toUpperCase()),
+                                child: HoverText(player.name[0].toUpperCase()),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    HoverText(
                                       player.name,
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    Text(
+                                    HoverText(
                                       'Current Score: $currentScore',
-                                      style: TextStyle(
-                                        color: Colors.white70,
+                                      style: const TextStyle(
+                                        color: Colors.white,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -312,7 +318,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                 color: const Color(0xFF131516),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withAlpha(51),
                     blurRadius: 10,
                     offset: const Offset(0, -2),
                   ),
@@ -323,7 +329,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => _showEndGameDialog(context),
-                      child: const Text('End Game'),
+                child: const HoverText('End Game'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -331,7 +337,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: _submitRound,
-                      child: const Text('Next Round'),
+                      child: const HoverText('Next Round'),
                     ),
                   ),
                 ],
@@ -372,7 +378,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
 
     if (!allScoresEntered) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter scores for all players')),
+        const SnackBar(content: HoverText('Please enter scores for all players')),
       );
       return;
     }
@@ -398,7 +404,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
     setState(() {});
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Last round undone')),
+      const SnackBar(content: HoverText('Last round undone')),
     );
   }
 
@@ -406,24 +412,24 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('End Game'),
-        content: const Text('Are you sure you want to end this game?'),
+  title: const HoverText('End Game'),
+  content: const HoverText('Are you sure you want to end this game?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: const HoverText('Cancel'),
           ),
           TextButton(
+            // ignore: use_build_context_synchronously
             onPressed: () async {
               Navigator.pop(ctx);
               final gameProvider = context.read<GameProvider>();
               await gameProvider.endGame();
-              
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/game-summary');
-              }
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              Navigator.pushReplacementNamed(context, '/game-summary');
             },
-            child: const Text('End Game'),
+            child: const HoverText('End Game'),
           ),
         ],
       ),
@@ -441,21 +447,21 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('🏆 Winner!'),
-        content: Text(
+        title: const HoverText('🏆 Winner!'),
+        content: HoverText(
           '${winner?.name ?? "Unknown"} has reached the target score!',
         ),
         actions: [
           TextButton(
+            // ignore: use_build_context_synchronously
             onPressed: () async {
               Navigator.pop(ctx);
               await gameProvider.endGame();
-              
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/game-summary');
-              }
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              Navigator.pushReplacementNamed(context, '/game-summary');
             },
-            child: const Text('View Results'),
+            child: const HoverText('View Results'),
           ),
         ],
       ),

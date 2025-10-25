@@ -1,4 +1,6 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:io';
+
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import '../models/player.dart';
 import '../models/game.dart';
@@ -12,6 +14,12 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
+    // Ensure ffi database factory is initialized on desktop platforms
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
     _database = await _initDB('board_game_scorekeeper.db');
     return _database!;
   }
@@ -188,7 +196,6 @@ class DatabaseHelper {
   }
 
   Future<List<Game>> getGamesByPlayer(String playerId) async {
-    final db = await database;
     final allGames = await getAllGames();
     return allGames.where((game) => game.playerIds.contains(playerId)).toList();
   }

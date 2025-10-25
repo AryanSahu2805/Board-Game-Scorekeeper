@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/player_provider.dart';
+import '../providers/game_provider.dart';
+import '../widgets/hover_text.dart';
 
 class PlayerManagementScreen extends StatelessWidget {
   const PlayerManagementScreen({super.key});
@@ -11,30 +13,30 @@ class PlayerManagementScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Player Management'),
       ),
-      body: Consumer<PlayerProvider>(
-        builder: (context, playerProvider, child) {
-          if (playerProvider.isLoading) {
+      body: Consumer2<PlayerProvider, GameProvider>(
+        builder: (context, playerProvider, gameProvider, child) {
+          if (playerProvider.isLoading || gameProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final players = playerProvider.players;
 
           if (players.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.people_outline,
                       size: 80, color: Colors.white24),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'No players yet',
-                    style: TextStyle(fontSize: 18, color: Colors.white54),
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Add your first player to get started',
-                    style: TextStyle(color: Colors.white38),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ],
               ),
@@ -46,16 +48,20 @@ class PlayerManagementScreen extends StatelessWidget {
             itemCount: players.length,
             itemBuilder: (context, index) {
               final player = players[index];
+              // compute stats from games list so tournament games are included
+              final playerGames = gameProvider.games.where((g) => g.playerIds.contains(player.id)).toList();
+              final gamesCount = playerGames.length;
+              final winsCount = playerGames.where((g) => g.winnerId == player.id).length;
+              final winRate = gamesCount == 0 ? player.winRate : (winsCount / gamesCount) * 100;
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
                   leading: CircleAvatar(
-                    child: Text(player.name[0].toUpperCase()),
+                    child: HoverText(player.name[0].toUpperCase()),
                   ),
-                  title: Text(player.name),
-                  subtitle: Text(
-                    '${player.totalGamesPlayed} games • ${player.winRate.toStringAsFixed(1)}% win rate',
-                  ),
+                  title: HoverText(player.name),
+                  subtitle: HoverText('$gamesCount games • ${winRate.toStringAsFixed(1)}% win rate'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

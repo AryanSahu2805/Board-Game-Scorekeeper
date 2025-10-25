@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/player_provider.dart';
+import '../widgets/hover_text.dart';
 
 class GameSummaryScreen extends StatelessWidget {
   const GameSummaryScreen({super.key});
@@ -10,7 +11,7 @@ class GameSummaryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Game Summary'),
+        title: const HoverText('Game Summary'),
         automaticallyImplyLeading: false,
       ),
       body: Consumer2<GameProvider, PlayerProvider>(
@@ -18,7 +19,7 @@ class GameSummaryScreen extends StatelessWidget {
           final game = gameProvider.currentGame;
           
           if (game == null) {
-            return const Center(child: Text('No game data available'));
+            return const Center(child: HoverText('No game data available'));
           }
 
           // Sort players by score
@@ -41,7 +42,7 @@ class GameSummaryScreen extends StatelessWidget {
                 // Winner Card
                 if (winner != null) ...[
                   Card(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withAlpha(26),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(
@@ -52,7 +53,7 @@ class GameSummaryScreen extends StatelessWidget {
                             color: Colors.amber,
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          const HoverText(
                             'Winner!',
                             style: TextStyle(
                               fontSize: 24,
@@ -60,7 +61,7 @@ class GameSummaryScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
+                          HoverText(
                             winner.name,
                             style: const TextStyle(
                               fontSize: 32,
@@ -69,11 +70,11 @@ class GameSummaryScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            '${game.finalScores[winner.id]} points',
+                          HoverText(
+                            '${game.finalScores[winner.id] ?? 0} points',
                             style: const TextStyle(
                               fontSize: 20,
-                              color: Colors.white70,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -90,7 +91,7 @@ class GameSummaryScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        HoverText(
                           game.gameName,
                           style: const TextStyle(
                             fontSize: 20,
@@ -98,9 +99,9 @@ class GameSummaryScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        HoverText(
                           'Total Rounds: ${game.totalRounds}',
-                          style: const TextStyle(color: Colors.white70),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
@@ -109,7 +110,7 @@ class GameSummaryScreen extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Final Standings
-                const Text(
+                const HoverText(
                   'Final Standings',
                   style: TextStyle(
                     fontSize: 18,
@@ -124,7 +125,7 @@ class GameSummaryScreen extends StatelessWidget {
                   final player = playerProvider.getPlayerById(playerId);
                   final score = game.finalScores[playerId] ?? 0;
 
-                  if (player == null) return const SizedBox();
+                  if (player == null) return const SizedBox.shrink();
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
@@ -137,7 +138,7 @@ class GameSummaryScreen extends StatelessWidget {
                                 : position == 3
                                     ? Colors.orange[300]
                                     : Colors.grey[700],
-                        child: Text(
+                        child: HoverText(
                           '$position',
                           style: TextStyle(
                             color: position <= 3 ? Colors.black : Colors.white,
@@ -145,7 +146,7 @@ class GameSummaryScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      title: Text(
+                      title: HoverText(
                         player.name,
                         style: TextStyle(
                           fontWeight: position == 1 
@@ -153,7 +154,7 @@ class GameSummaryScreen extends StatelessWidget {
                               : FontWeight.normal,
                         ),
                       ),
-                      trailing: Text(
+                      trailing: HoverText(
                         '$score pts',
                         style: TextStyle(
                           fontSize: 18,
@@ -162,12 +163,12 @@ class GameSummaryScreen extends StatelessWidget {
                               : FontWeight.normal,
                           color: position == 1 
                               ? Colors.amber 
-                              : Colors.white70,
+                              : Colors.white,
                         ),
                       ),
                     ),
                   );
-                }).toList(),
+                }),
 
                 const SizedBox(height: 24),
 
@@ -184,7 +185,7 @@ class GameSummaryScreen extends StatelessWidget {
                             (route) => false,
                           );
                         },
-                        child: const Text('Home'),
+                        child: const HoverText('Home'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -198,7 +199,7 @@ class GameSummaryScreen extends StatelessWidget {
                             (route) => false,
                           );
                         },
-                        child: const Text('New Game'),
+                        child: const HoverText('New Game'),
                       ),
                     ),
                   ],

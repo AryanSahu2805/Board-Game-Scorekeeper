@@ -146,6 +146,12 @@ class GameProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Select an existing game to be the current game (e.g. for viewing summary)
+  void selectGame(Game game) {
+    _currentGame = game;
+    notifyListeners();
+  }
+
   void cancelGame() {
     _currentGame = null;
     _selectedTemplate = null;

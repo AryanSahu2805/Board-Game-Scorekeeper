@@ -10,6 +10,7 @@ import 'screens/player_management_screen.dart';
 import 'screens/tournament_setup_screen.dart';
 import 'screens/tournament_view_screen.dart';
 import 'screens/game_summary_screen.dart';
+import 'screens/history_screen.dart';
 
 void main() {
   runApp(const BoardGameScorekeeperApp());
@@ -24,7 +25,7 @@ class BoardGameScorekeeperApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => PlayerProvider()..loadPlayers()),
         ChangeNotifierProvider(create: (_) => GameProvider()..loadGames()),
-        ChangeNotifierProvider(create: (_) => TournamentProvider()..loadTournaments()),
+        ChangeNotifierProvider(create: (ctx) => TournamentProvider(gameProvider: Provider.of<GameProvider>(ctx, listen: false))..loadTournaments()),
       ],
       child: MaterialApp(
         title: 'Board Game Scorekeeper',
@@ -32,6 +33,7 @@ class BoardGameScorekeeperApp extends StatelessWidget {
         theme: _buildTheme(),
         routes: {
           '/': (context) => const HomeScreen(),
+          '/history': (context) => const HistoryScreen(),
           '/score-entry': (context) => const ScoreEntryScreen(),
           '/player-profile': (context) => const PlayerProfileScreen(),
           '/player-management': (context) => const PlayerManagementScreen(),
@@ -47,6 +49,14 @@ class BoardGameScorekeeperApp extends StatelessWidget {
   ThemeData _buildTheme() {
     final base = ThemeData.dark();
     return base.copyWith(
+      textTheme: base.textTheme.apply(
+        bodyColor: Colors.blue,
+        displayColor: Colors.blue,
+      ),
+      primaryTextTheme: base.primaryTextTheme.apply(
+        bodyColor: Colors.blue,
+        displayColor: Colors.blue,
+      ),
       colorScheme: base.colorScheme.copyWith(
         primary: Colors.grey[900],
         secondary: Colors.blueGrey,
@@ -85,6 +95,17 @@ class BoardGameScorekeeperApp extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+      ),
+      // Make checkboxes match the app blue and have a contrasting check mark
+      // Use WidgetStateProperty / WidgetState (newer API) to avoid deprecated MaterialStateProperty/MaterialState
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+          // When checked, use the primary blue. When unchecked, use a slightly transparent blue for the border/fill.
+          if (states.contains(WidgetState.selected)) return Colors.blue;
+          return Colors.blue.withAlpha(120);
+        }),
+        checkColor: WidgetStateProperty.all<Color>(Colors.white),
+        side: const BorderSide(color: Colors.blue),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

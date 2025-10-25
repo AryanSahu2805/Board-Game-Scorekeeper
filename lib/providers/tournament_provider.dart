@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/tournament.dart';
+import '../models/game.dart';
+import 'game_provider.dart';
 import '../services/database_helper.dart';
 import '../services/tournament_service.dart';
 import 'package:uuid/uuid.dart';
@@ -7,7 +9,9 @@ import 'package:uuid/uuid.dart';
 class TournamentProvider with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   final TournamentService _tournamentService = TournamentService();
+  final GameProvider? _gameProvider;
   final _uuid = const Uuid();
+  TournamentProvider({GameProvider? gameProvider}) : _gameProvider = gameProvider;
   
   List<Tournament> _tournaments = [];
   Tournament? _currentTournament;
@@ -173,6 +177,35 @@ class TournamentProvider with ChangeNotifier {
     _currentTournament!.winnerId = _tournamentService.determineTournamentWinner(_standings);
     
     await _dbHelper.updateTournament(_currentTournament!);
+    // Also record the tournament win as a Game so it appears in recent games
+    try {
+      final winnerId = _currentTournament!.winnerId;
+      final gameId = _uuid.v4();
+      final finalScores = <String, int>{};
+      for (var pid in _currentTournament!.participantIds) {
+        finalScores[pid] = pid == winnerId ? 1 : 0;
+      }
+
+      final tournamentGame = Game(
+        id: gameId,
+        gameName: 'Tournament: ${_currentTournament!.name}',
+        dateTime: DateTime.now(),
+        playerIds: List<String>.from(_currentTournament!.participantIds),
+        finalScores: finalScores,
+        winnerId: winnerId,
+        totalRounds: 0,
+        isCompleted: true,
+      );
+
+      await _dbHelper.insertGame(tournamentGame);
+
+      // If a GameProvider was injected, refresh its games so UI updates immediately
+      if (_gameProvider != null) {
+        await _gameProvider!.loadGames();
+      }
+    } catch (e) {
+      debugPrint('Error recording tournament game: $e');
+    }
   }
 
   void _updateStandings() {

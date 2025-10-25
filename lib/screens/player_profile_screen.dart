@@ -5,6 +5,7 @@ import '../providers/player_provider.dart';
 import '../providers/game_provider.dart';
 import '../models/player.dart';
 import '../models/game.dart';
+import '../widgets/hover_text.dart';
 
 class PlayerProfileScreen extends StatelessWidget {
   const PlayerProfileScreen({super.key});
@@ -23,14 +24,14 @@ class PlayerProfileScreen extends StatelessWidget {
 
         if (player == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Player Profile')),
-            body: const Center(child: Text('Player not found')),
+            appBar: AppBar(title: const HoverText('Player Profile')),
+              body: const Center(child: HoverText('Player not found')),
           );
         }
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Player Profile'),
+            title: const HoverText('Player Profile'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.edit),
@@ -48,13 +49,13 @@ class PlayerProfileScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        child: Text(
-                          player.name[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 36),
-                        ),
+                        child: HoverText(
+                            player.name[0].toUpperCase(),
+                            style: const TextStyle(fontSize: 36),
+                          ),
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      HoverText(
                         player.name,
                         style: const TextStyle(
                           fontSize: 24,
@@ -62,34 +63,127 @@ class PlayerProfileScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      HoverText(
                         'Member since ${DateFormat('MMM yyyy').format(player.createdAt)}',
-                        style: const TextStyle(color: Colors.white70),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Statistics Cards
-                Row(
-                  children: [
-                    _statCard('Games\nPlayed', '${player.totalGamesPlayed}'),
-                    const SizedBox(width: 8),
-                    _statCard('Wins', '${player.totalWins}'),
-                    const SizedBox(width: 8),
-                    _statCard('Win Rate', '${player.winRate.toStringAsFixed(1)}%'),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                // Statistics + Recent Games (computed from persisted games so tournament wins are included)
+                FutureBuilder<List<Game>>(
+                  future: gameProvider.getGamesByPlayer(player.id),
+                  builder: (context, snapshot) {
+                    final loading = snapshot.connectionState == ConnectionState.waiting;
+                    final gamesList = snapshot.hasData ? snapshot.data! : <Game>[];
 
-                // Favorite Game
+                    // Compute stats from games if available, otherwise fall back to stored player fields
+                    final totalGames = gamesList.isNotEmpty ? gamesList.length : player.totalGamesPlayed;
+                    final wins = gamesList.isNotEmpty
+                        ? gamesList.where((g) => g.winnerId == player.id).length
+                        : player.totalWins;
+                    final winRate = totalGames == 0 ? 0.0 : (wins / totalGames) * 100;
+
+                    return Column(
+                      children: [
+                        Row(
+                          children: [
+                            _statCard('Games\nPlayed', '$totalGames'),
+                            const SizedBox(width: 8),
+                            _statCard('Wins', '$wins'),
+                            const SizedBox(width: 8),
+                            _statCard('Win Rate', '${winRate.toStringAsFixed(1)}%'),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Favorite Game
+                        if (player.favoriteGame != null)
+                          Card(
+                            child: ListTile(
+                              leading: const Icon(Icons.star, color: Colors.amber),
+                              title: const HoverText('Favorite Game'),
+                              subtitle: HoverText(player.favoriteGame!),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+
+                        // Recent Games
+                        if (loading)
+                          const Center(child: CircularProgressIndicator())
+                        else if (gamesList.isEmpty)
+                          const Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(24),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.history, size: 48, color: Colors.white24),
+                                    SizedBox(height: 8),
+                                    HoverText(
+                                      'No game history yet',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const HoverText(
+                                'Recent Games',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ...gamesList.take(10).map((game) {
+                                final isWinner = game.winnerId == player.id;
+                                final playerScore = game.finalScores[player.id] ?? 0;
+
+                                return Card(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  child: ListTile(
+                                    leading: Icon(
+                                      isWinner ? Icons.emoji_events : Icons.sports_esports,
+                                      color: isWinner ? Colors.amber : Colors.grey,
+                                    ),
+                                    title: HoverText(game.gameName),
+                                    subtitle: HoverText(
+                                      isWinner
+                                          ? 'Won with $playerScore pts'
+                                          : 'Lost ($playerScore pts)',
+                                    ),
+                                    trailing: HoverText(
+                                      DateFormat('MMM d').format(game.dateTime),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
                 if (player.favoriteGame != null)
                   Card(
                     child: ListTile(
                       leading: const Icon(Icons.star, color: Colors.amber),
-                      title: const Text('Favorite Game'),
-                      subtitle: Text(player.favoriteGame!),
+                      title: const HoverText('Favorite Game'),
+                      subtitle: HoverText(player.favoriteGame!),
                     ),
                   ),
                 const SizedBox(height: 16),
@@ -103,17 +197,17 @@ class PlayerProfileScreen extends StatelessWidget {
                     }
 
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Card(
+                      return const Card(
                         child: Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: EdgeInsets.all(24),
                           child: Center(
-                            child: Column(
+                                child: Column(
                               children: [
                                 Icon(Icons.history, size: 48, color: Colors.white24),
-                                const SizedBox(height: 8),
-                                const Text(
+                                SizedBox(height: 8),
+                                HoverText(
                                   'No game history yet',
-                                  style: TextStyle(color: Colors.white54),
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ],
                             ),
@@ -127,7 +221,7 @@ class PlayerProfileScreen extends StatelessWidget {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        const HoverText(
                           'Recent Games',
                           style: TextStyle(
                             fontSize: 18,
@@ -146,22 +240,22 @@ class PlayerProfileScreen extends StatelessWidget {
                                 isWinner ? Icons.emoji_events : Icons.sports_esports,
                                 color: isWinner ? Colors.amber : Colors.grey,
                               ),
-                              title: Text(game.gameName),
-                              subtitle: Text(
+                              title: HoverText(game.gameName),
+                              subtitle: HoverText(
                                 isWinner
                                     ? 'Won with $playerScore pts'
                                     : 'Lost ($playerScore pts)',
                               ),
-                              trailing: Text(
+                              trailing: HoverText(
                                 DateFormat('MMM d').format(game.dateTime),
                                 style: const TextStyle(
-                                  color: Colors.white54,
+                                  color: Colors.white,
                                   fontSize: 12,
                                 ),
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     );
                   },
@@ -192,7 +286,7 @@ class PlayerProfileScreen extends StatelessWidget {
               Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Colors.white,
                   fontSize: 12,
                 ),
                 textAlign: TextAlign.center,
