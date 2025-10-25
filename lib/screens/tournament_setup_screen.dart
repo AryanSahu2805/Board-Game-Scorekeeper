@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/tournament_provider.dart';
 import '../providers/player_provider.dart';
+import '../providers/game_provider.dart';
 import '../models/tournament.dart';
 
 class TournamentSetupScreen extends StatefulWidget {
@@ -135,8 +136,8 @@ class _TournamentSetupScreenState extends State<TournamentSetupScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Consumer<PlayerProvider>(
-                    builder: (context, playerProvider, child) {
+                  Consumer2<PlayerProvider, GameProvider>(
+                    builder: (context, playerProvider, gameProvider, child) {
                       if (playerProvider.players.isEmpty) {
                         return Center(
                           child: Column(
@@ -156,13 +157,22 @@ class _TournamentSetupScreenState extends State<TournamentSetupScreen> {
                         );
                       }
 
+                      // Use the in-memory games list to compute up-to-date stats
+                      final allGames = gameProvider.games;
+
                       return Column(
                         children: playerProvider.players.map((player) {
                           final isSelected = _selectedParticipants.contains(player.id);
+
+                          final playerGames = allGames.where((g) => g.playerIds.contains(player.id) && g.isCompleted).toList();
+                          final gamesPlayed = playerGames.length;
+                          final wins = playerGames.where((g) => g.winnerId == player.id).length;
+                          final winRate = gamesPlayed == 0 ? 0.0 : (wins / gamesPlayed) * 100.0;
+
                           return CheckboxListTile(
                             title: Text(player.name),
                             subtitle: Text(
-                              '${player.totalWins} wins • ${player.winRate.toStringAsFixed(0)}% win rate',
+                              '$wins wins • ${winRate.toStringAsFixed(0)}% win rate',
                             ),
                             value: isSelected,
                             onChanged: (value) {

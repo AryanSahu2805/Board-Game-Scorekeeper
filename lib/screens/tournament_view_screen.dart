@@ -275,7 +275,10 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
                 fontWeight: position == 1 ? FontWeight.bold : FontWeight.normal,
               ),
             ),
-            subtitle: HoverText('${standing.matchWins}W - ${standing.matchLosses}L'),
+            subtitle: HoverText(
+              '${standing.matchWins}W - ${standing.matchLosses}L • '
+              '${player?.totalWins ?? 0} wins • ${player?.winRate.toStringAsFixed(0) ?? '0'}% all-time',
+            ),
             trailing: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,

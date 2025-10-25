@@ -42,6 +42,17 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              // If there's nothing to pop, go to root
+              Navigator.pushReplacementNamed(context, '/');
+            }
+          },
+        ),
         title: HoverText(_gameStarted ? 'Enter Scores' : 'Setup Game'),
         actions: _gameStarted
             ? [
