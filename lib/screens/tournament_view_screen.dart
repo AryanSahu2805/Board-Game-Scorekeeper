@@ -158,7 +158,25 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
       child: InkWell(
         onTap: match.isCompleted
             ? null
-            : () => _showMatchResultDialog(match, player1?.name ?? '', player2?.name ?? ''),
+            : () async {
+                final res = await Navigator.pushNamed(
+                  context,
+                  '/match-result',
+                  arguments: {
+                    'matchId': match.id,
+                    'player1Id': match.player1Id,
+                    'player2Id': match.player2Id,
+                    'player1Name': player1?.name ?? '',
+                    'player2Name': player2?.name ?? '',
+                  },
+                );
+
+                if (res == true && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Match result recorded')),
+                  );
+                }
+              },
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -344,8 +362,8 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
   }
 
   void _showMatchResultDialog(Match match, String player1Name, String player2Name) {
-    final player1ScoreController = TextEditingController();
-    final player2ScoreController = TextEditingController();
+    int player1Score = 0;
+    int player2Score = 0;
     String? selectedWinner;
 
     showDialog(
@@ -356,47 +374,80 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: player1ScoreController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: '$player1Name Score',
-                  border: const OutlineInputBorder(),
-                ),
+              // Player 1 counter
+              Row(
+                children: [
+                  Expanded(child: HoverText(player1Name)),
+                  IconButton(
+                    onPressed: () => setState(() {
+                      if (player1Score > 0) { player1Score--; }
+                      // If scores change, clear explicit winner selection so it can be re-selected
+                      selectedWinner = null;
+                    }),
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: HoverText('$player1Score'),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() {
+                      player1Score++;
+                      selectedWinner = null;
+                    }),
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: player2ScoreController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: '$player2Name Score',
-                  border: const OutlineInputBorder(),
-                ),
+              const SizedBox(height: 12),
+              // Player 2 counter
+              Row(
+                children: [
+                  Expanded(child: HoverText(player2Name)),
+                  IconButton(
+                    onPressed: () => setState(() {
+                      if (player2Score > 0) { player2Score--; }
+                      selectedWinner = null;
+                    }),
+                    icon: const Icon(Icons.remove_circle_outline),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: HoverText('$player2Score'),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() {
+                      player2Score++;
+                      selectedWinner = null;
+                    }),
+                    icon: const Icon(Icons.add_circle_outline),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               const HoverText('Winner:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Row(
                 children: [
-                   Expanded(
-                     child: ChoiceChip(
-                       label: HoverText(player1Name),
-                       selected: selectedWinner == match.player1Id,
-                       onSelected: (_) {
-                         setState(() => selectedWinner = match.player1Id);
-                       },
-                     ),
-                   ),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: HoverText(player1Name),
+                      selected: selectedWinner == match.player1Id || (selectedWinner == null && player1Score > player2Score),
+                      onSelected: (_) {
+                        setState(() => selectedWinner = match.player1Id);
+                      },
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                   Expanded(
-                     child: ChoiceChip(
-                       label: HoverText(player2Name),
-                       selected: selectedWinner == match.player2Id,
-                       onSelected: (_) {
-                         setState(() => selectedWinner = match.player2Id);
-                       },
-                     ),
-                   ),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: HoverText(player2Name),
+                      selected: selectedWinner == match.player2Id || (selectedWinner == null && player2Score > player1Score),
+                      onSelected: (_) {
+                        setState(() => selectedWinner = match.player2Id);
+                      },
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -408,13 +459,17 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
             ),
             TextButton(
               onPressed: () async {
-                final player1Score = int.tryParse(player1ScoreController.text);
-                final player2Score = int.tryParse(player2ScoreController.text);
+                // If no explicit winner chosen, infer from scores
+                String? winnerId = selectedWinner;
+                if (winnerId == null) {
+                  if (player1Score > player2Score) { winnerId = match.player1Id; }
+                  else if (player2Score > player1Score) { winnerId = match.player2Id; }
+                }
 
-                if (player1Score == null || player2Score == null || selectedWinner == null) {
+                if (winnerId == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Please enter valid scores and select a winner'),
+                      content: Text('Please ensure a winner is selected or scores are not tied'),
                     ),
                   );
                   return;
@@ -422,7 +477,7 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
 
                 await context.read<TournamentProvider>().recordMatchResult(
                       matchId: match.id,
-                      winnerId: selectedWinner!,
+                      winnerId: winnerId,
                       player1Score: player1Score,
                       player2Score: player2Score,
                     );

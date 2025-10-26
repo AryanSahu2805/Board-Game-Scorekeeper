@@ -9,6 +9,7 @@ import 'screens/player_profile_screen.dart';
 import 'screens/player_management_screen.dart';
 import 'screens/tournament_setup_screen.dart';
 import 'screens/tournament_view_screen.dart';
+import 'screens/match_result_screen.dart';
 import 'screens/game_summary_screen.dart';
 import 'screens/history_screen.dart';
 
@@ -39,6 +40,7 @@ class BoardGameScorekeeperApp extends StatelessWidget {
           '/player-management': (context) => const PlayerManagementScreen(),
           '/tournament-setup': (context) => const TournamentSetupScreen(),
           '/tournament-view': (context) => const TournamentViewScreen(),
+          '/match-result': (context) => const MatchResultScreen(),
           '/game-summary': (context) => const GameSummaryScreen(),
         },
         initialRoute: '/',
