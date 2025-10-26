@@ -19,7 +19,74 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  Widget _buildBracketTab(
+    Tournament tournament,
+    TournamentProvider tournamentProvider,
+    PlayerProvider playerProvider,
+  ) {
+    final matches = tournamentProvider.currentMatches;
+    if (matches.isEmpty) return const Center(child: HoverText('No matches scheduled'));
+
+    final rounds = <int>{};
+  for (var m in matches) { rounds.add(m.roundNumber); }
+    final maxRound = rounds.isEmpty ? 0 : rounds.reduce((a, b) => a > b ? a : b);
+
+    // Build a column for each round
+    final columns = <Widget>[];
+    for (var round = 1; round <= maxRound; round++) {
+      final roundMatches = matches.where((m) => m.roundNumber == round).toList();
+
+      final children = <Widget>[];
+      children.add(Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        child: HoverText('Round $round', style: const TextStyle(fontWeight: FontWeight.bold)),
+      ));
+
+      for (var m in roundMatches) {
+        final p1 = playerProvider.getPlayerById(m.player1Id)?.name ?? 'Unknown';
+        final p2 = m.player2Id == 'BYE' ? 'Bye' : (playerProvider.getPlayerById(m.player2Id)?.name ?? 'Unknown');
+
+        children.add(Card(
+          color: Theme.of(context).cardColor,
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HoverText('$p1 vs $p2', style: const TextStyle(fontSize: 14)),
+                const SizedBox(height: 6),
+                if (m.isCompleted)
+                  HoverText('Winner: ${playerProvider.getPlayerById(m.winnerId ?? '')?.name ?? 'TBD'}', style: const TextStyle(color: Colors.green)),
+                if (!m.isCompleted) const HoverText('Pending', style: TextStyle(color: Colors.white70)),
+              ],
+            ),
+          ),
+        ));
+      }
+
+      columns.add(Container(
+        width: 220,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(children: children),
+      ));
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: columns
+              .map((c) => Padding(padding: const EdgeInsets.only(right: 12), child: c))
+              .toList(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -62,6 +129,7 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
               tabs: const [
                 Tab(text: 'Matches'),
                 Tab(text: 'Standings'),
+                Tab(text: 'Bracket'),
               ],
             ),
           ),
@@ -70,6 +138,7 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
             children: [
               _buildMatchesTab(tournament, tournamentProvider, playerProvider),
               _buildStandingsTab(tournamentProvider, playerProvider),
+              _buildBracketTab(tournament, tournamentProvider, playerProvider),
             ],
           ),
           bottomNavigationBar: tournament.status == TournamentStatus.completed
