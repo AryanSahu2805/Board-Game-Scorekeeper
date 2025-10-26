@@ -178,14 +178,27 @@ class GameSummaryScreen extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
+                          // Cancel any in-memory game state then go back if possible;
+                          // otherwise fall back to replacing with home route.
                           gameProvider.cancelGame();
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/',
-                            (route) => false,
-                          );
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/',
+                              (route) => false,
+                            );
+                          }
                         },
-                        child: const HoverText('Home'),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.arrow_back),
+                            SizedBox(width: 8),
+                            HoverText('Back'),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
