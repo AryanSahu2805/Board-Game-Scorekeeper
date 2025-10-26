@@ -107,10 +107,15 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
       scrollDirection: Axis.horizontal,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: rowChildren,
+        child: ConstrainedBox(
+          // Ensure the row can center its children when there's spare space
+          constraints: BoxConstraints(minWidth: MediaQuery.of(context).size.width),
+          child: IntrinsicHeight(
+            child: Row(
+              mainAxisAlignment: columns.length <= 2 ? MainAxisAlignment.center : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: rowChildren,
+            ),
           ),
         ),
       ),

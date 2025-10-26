@@ -16,7 +16,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
   GameTemplate? _selectedTemplate;
   final List<String> _selectedPlayerIds = [];
   bool _gameStarted = false;
-  final Map<String, TextEditingController> _scoreControllers = {};
+  final Map<String, int> _roundScores = {};
   final int _currentPlayerIndex = 0;
 
   @override
@@ -32,9 +32,7 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
 
   @override
   void dispose() {
-    for (var controller in _scoreControllers.values) {
-      controller.dispose();
-    }
+    // no controllers to dispose now; counters are plain ints
     super.dispose();
   }
 
@@ -200,10 +198,10 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
         final game = gameProvider.currentGame;
   if (game == null) return const Center(child: HoverText('No active game'));
 
-        // Initialize score controllers
+        // Initialize round counters
         for (var playerId in game.playerIds) {
-          if (!_scoreControllers.containsKey(playerId)) {
-            _scoreControllers[playerId] = TextEditingController();
+          if (!_roundScores.containsKey(playerId)) {
+            _roundScores[playerId] = 0;
           }
         }
 
@@ -284,37 +282,79 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          TextField(
-                            controller: _scoreControllers[playerId],
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              hintText: 'Enter score for this round',
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline),
-                                    onPressed: () {
-                                      final current = int.tryParse(
-                                              _scoreControllers[playerId]!.text) ??
-                                          0;
-                                      _scoreControllers[playerId]!.text =
-                                          (current - 1).toString();
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.add_circle_outline),
-                                    onPressed: () {
-                                      final current = int.tryParse(
-                                              _scoreControllers[playerId]!.text) ??
-                                          0;
-                                      _scoreControllers[playerId]!.text =
-                                          (current + 1).toString();
-                                    },
-                                  ),
-                                ],
+                          // Counter UI for round score
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Counter display and buttons
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Decrement
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(20),
+                                        onTap: () {
+                                          setState(() {
+                                            final cur = _roundScores[playerId] ?? 0;
+                                            if (cur > 0) _roundScores[playerId] = cur - 1;
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          child: const Icon(Icons.remove_circle_outline, size: 26),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Value
+                                    Container(
+                                      constraints: const BoxConstraints(minWidth: 48),
+                                      alignment: Alignment.center,
+                                      child: HoverText(
+                                        '${_roundScores[playerId] ?? 0}',
+                                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Increment
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(20),
+                                        onTap: () {
+                                          setState(() {
+                                            final cur = _roundScores[playerId] ?? 0;
+                                            _roundScores[playerId] = cur + 1;
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          child: const Icon(Icons.add_circle_outline, size: 26),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
+
+                              // Optional quick-reset button
+                              IconButton(
+                                tooltip: 'Reset',
+                                onPressed: () {
+                                  setState(() {
+                                    _roundScores[playerId] = 0;
+                                  });
+                                },
+                                icon: const Icon(Icons.refresh_outlined),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -376,29 +416,16 @@ class _ScoreEntryScreenState extends State<ScoreEntryScreen> {
   void _submitRound() {
     final gameProvider = context.read<GameProvider>();
     final roundScores = <String, int>{};
-
-    bool allScoresEntered = true;
-    for (var entry in _scoreControllers.entries) {
-      final score = int.tryParse(entry.value.text);
-      if (score == null) {
-        allScoresEntered = false;
-        break;
-      }
-      roundScores[entry.key] = score;
-    }
-
-    if (!allScoresEntered) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: HoverText('Please enter scores for all players')),
-      );
-      return;
+    // Collect scores from the counters
+    for (var entry in _roundScores.entries) {
+      roundScores[entry.key] = entry.value;
     }
 
     gameProvider.addRoundScores(roundScores);
 
-    // Clear controllers
-    for (var controller in _scoreControllers.values) {
-      controller.clear();
+    // Reset round counters
+    for (var key in _roundScores.keys.toList()) {
+      _roundScores[key] = 0;
     }
 
     // Check win condition
