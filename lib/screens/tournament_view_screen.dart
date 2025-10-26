@@ -33,6 +33,7 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
     final rounds = <int>{};
   for (var m in matches) { rounds.add(m.roundNumber); }
     final maxRound = rounds.isEmpty ? 0 : rounds.reduce((a, b) => a > b ? a : b);
+    
 
     // Build a column for each round
     final columns = <Widget>[];
@@ -43,6 +44,11 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
       children.add(Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         child: HoverText('Round $round', style: const TextStyle(fontWeight: FontWeight.bold)),
+      ));
+      // Winners label appears under the round header
+      children.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.0),
+        child: HoverText('Winners', style: TextStyle(fontSize: 12, color: Colors.white70)),
       ));
 
       for (var m in roundMatches) {
@@ -68,6 +74,13 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
         ));
       }
 
+      // After the winner matches, show a "Losers" label at the bottom of the column
+      children.add(const SizedBox(height: 12));
+      children.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.0),
+        child: HoverText('Losers', style: TextStyle(fontSize: 12, color: Colors.white70)),
+      ));
+
       columns.add(Container(
         width: 220,
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -75,15 +88,30 @@ class _TournamentViewScreenState extends State<TournamentViewScreen>
       ));
     }
 
+    // Build children interleaving a vertical separator line between round columns
+    final rowChildren = <Widget>[];
+    for (var i = 0; i < columns.length; i++) {
+      rowChildren.add(columns[i]);
+      if (i < columns.length - 1) {
+        rowChildren.add(const SizedBox(width: 12));
+        rowChildren.add(Container(
+          width: 2,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          color: Colors.white12,
+        ));
+        rowChildren.add(const SizedBox(width: 12));
+      }
+    }
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: columns
-              .map((c) => Padding(padding: const EdgeInsets.only(right: 12), child: c))
-              .toList(),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rowChildren,
+          ),
         ),
       ),
     );
