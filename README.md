@@ -13,7 +13,9 @@
 
 **Watch our complete project presentation and demo:**
 
-> 🔗 **[Project Presentation Video Link]** *(Add your presentation video link here)*
+> 🔗 [App Demo Video](https://drive.google.com/file/d/189AYVvg6G3fADSk_iqNizYNPkRTrN5mk/view?usp=sharing)
+> 🔗 [Presentation Part 1](https://drive.google.com/file/d/12MsHAivpNdS6jZP5WAgepOKvassW5sDT/view?usp=sharing)
+> 🔗 [Presentation Part 2](https://drive.google.com/file/d/17w6Z3wxaqtdA-FMSM10nEcJB07IX8UMZ/view)
 
 ---
 
@@ -846,4 +848,5 @@ Have questions, suggestions, or feedback? Reach out to us!
 
 **Last Updated**: October 2025  
 **Version**: 1.0.0  
+
 **Status**: ✅ Production Ready
